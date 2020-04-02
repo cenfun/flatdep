@@ -1,0 +1,13 @@
+{
+  "name": "flatdep",
+  "version": "1.0.0",
+  "description": "flat dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cenfun/flatdep.git"
+  }
+}

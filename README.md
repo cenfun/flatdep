@@ -1,2 +1,4 @@
 # flatdep
-flatdep
+
+Tool to generate flat dependencies
+
