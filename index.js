@@ -36,6 +36,20 @@ const getValue = function (data, dotPathStr, defaultValue) {
     return defaultValue;
 };
 
+const jsonMerge = function (a, b) {
+    if (a && b) {
+        for (let k in b) {
+            let v = b[k];
+            if (typeof (v) === "object") {
+                a[k] = Object.assign(a[k], v);
+            } else {
+                a[k] = v;
+            }
+        }
+    }
+    return a;
+};
+
 const readFileContentSync = function (filePath) {
     var content = null;
     var isExists = fs.existsSync(filePath);
@@ -86,15 +100,14 @@ const getModuleDependencies = function (dependencies, moduleName, option) {
     return list;
 };
 
-const getModuleOutput = function (field, moduleName, moduleConf, moduleInfo, option) {
-    var override = getValue(option.overrides, moduleName, {});
+const getModuleOutput = function (field, moduleName, moduleConf, moduleInfo) {
 
     //https://docs.npmjs.com/files/package.json#main
     //https://docs.npmjs.com/files/package.json#browser
 
     //If your module is meant to be used client-side
     //the browser field should be used instead of the main field.
-    var output = getValue(override, field, moduleConf[field]);
+    var output = getValue(moduleConf, field);
     if (!output) {
         return [];
     }
@@ -121,9 +134,26 @@ const getModuleOutput = function (field, moduleName, moduleConf, moduleInfo, opt
 };
 
 const getModuleFiles = function (moduleName, moduleConf, moduleInfo, option) {
-    var files = getModuleOutput("browser", moduleName, moduleConf, moduleInfo, option);
+
+    if (option.overrides.hasOwnProperty(moduleName)) {
+        var override = option.overrides[moduleName];
+        if (!override) {
+            return;
+        }
+        if (typeof (override) === "string") {
+            return [override];
+        }
+        if (isList(override)) {
+            return override;
+        }
+        if (typeof (override) === "object") {
+            moduleConf = jsonMerge(moduleConf, override);
+        }
+    }
+
+    var files = getModuleOutput("browser", moduleName, moduleConf, moduleInfo);
     if (!files.length) {
-        files = getModuleOutput("main", moduleName, moduleConf, moduleInfo, option);
+        files = getModuleOutput("main", moduleName, moduleConf, moduleInfo);
     }
     return files;
 };
@@ -172,6 +202,9 @@ const getModuleInfo = function (moduleName, option) {
 
     //cache files, append browser as module deps
     var moduleFiles = getModuleFiles(moduleName, moduleConf, moduleInfo, option);
+    if (!moduleFiles) {
+        return null;
+    }
     moduleFiles = moduleFiles.filter(function (item) {
         return item ? true : false;
     });
@@ -194,7 +227,7 @@ const getModuleInfo = function (moduleName, option) {
             absMainPath += ".js";
         }
         //relative path
-        var mainPath = path.relative(option.nodeModulesPath, absMainPath);
+        var mainPath = path.relative(option.packageJsonPath, absMainPath);
         mainPath = formatPath(mainPath);
         //console.log(item, absMainPath, mainPath);
         files.push(mainPath);
