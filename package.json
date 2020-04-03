@@ -9,5 +9,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cenfun/flatdep.git"
+  },
+  "dependencies": {
+    "console-grid": "^1.0.16"
   }
 }
