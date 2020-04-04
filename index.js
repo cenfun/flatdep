@@ -5,21 +5,21 @@ const CGS = ConsoleGrid.Style;
 const consoleGrid = new ConsoleGrid();
 
 // \ to /
-const formatPath = function (str) {
+const formatPath = function(str) {
     if (str) {
         str = str.replace(/\\/g, "/");
     }
     return str;
 };
 
-const isList = function (data) {
+const isList = function(data) {
     if (data && data instanceof Array && data.length > 0) {
         return true;
     }
     return false;
 };
 
-const toBytes = function (bytes) {
+const toBytes = function(bytes) {
 
     bytes = Math.max(bytes, 0);
 
@@ -49,7 +49,7 @@ const toBytes = function (bytes) {
     return bytes;
 };
 
-const readFileContentSync = function (filePath) {
+const readFileContentSync = function(filePath) {
     var content = null;
     var isExists = fs.existsSync(filePath);
     if (isExists) {
@@ -61,7 +61,7 @@ const readFileContentSync = function (filePath) {
     return content;
 };
 
-const readJSONSync = function (filePath) {
+const readJSONSync = function(filePath) {
     var content = readFileContentSync(filePath);
     var json = null;
     if (content) {
@@ -70,7 +70,7 @@ const readJSONSync = function (filePath) {
     return json;
 };
 
-const addLog = function (msg, option) {
+const addLog = function(msg, option) {
     if (option.silent) {
         return;
     }
@@ -79,7 +79,7 @@ const addLog = function (msg, option) {
 
 //=====================================================================================
 
-const addModuleFiles = function (name, files, option) {
+const addModuleFiles = function(name, files, option) {
     if (option.exclude.includes(name)) {
         return false;
     }
@@ -90,25 +90,29 @@ const addModuleFiles = function (name, files, option) {
     return true;
 };
 
-const getModuleDependencies = function (moduleConf, option) {
+const getModuleDependencies = function(moduleConf, option) {
     let dependencies = [];
     if (moduleConf.dependencies) {
         dependencies = Object.keys(moduleConf.dependencies);
     }
-    if (typeof (option.onDependencies) === "function") {
+    if (typeof(option.onDependencies) === "function") {
         dependencies = option.onDependencies(dependencies, moduleConf, option);
     }
     return dependencies;
 };
 
-const getModuleFilePath = function (modulePath, file, option) {
+const getModuleFilePath = function(modulePath, file, option) {
     //absolute path
-    var absMainPath = path.resolve(modulePath, file);
+    let absMainPath = path.resolve(modulePath, file);
     //if no extname and add .js exists 
     if (!fs.existsSync(absMainPath) && !path.extname(absMainPath)) {
         absMainPath += ".js";
     }
-    if (!fs.existsSync(absMainPath)) {
+
+    //do NOT check link
+    const stats = fs.lstatSync(modulePath);
+    const isLink = stats.isSymbolicLink();
+    if (!isLink && !fs.existsSync(absMainPath)) {
         addLog(CGS.red("ERROR: Not found file: " + absMainPath), option);
         return;
     }
@@ -119,20 +123,20 @@ const getModuleFilePath = function (modulePath, file, option) {
     return filePath;
 };
 
-const filterFileList = function (files, modulePath, option) {
+const filterFileList = function(files, modulePath, option) {
     files = files.map(file => getModuleFilePath(modulePath, file, option));
     files = files.filter(item => item);
     return files;
 };
 
-const getModuleMainFiles = function (modulePath, moduleConf, option) {
+const getModuleMainFiles = function(modulePath, moduleConf, option) {
     //https://docs.npmjs.com/files/package.json#main
     let files = [];
     var main = moduleConf.main;
     if (main) {
         if (Array.isArray(main)) {
             files = main;
-        } else if (typeof (main) === "string") {
+        } else if (typeof(main) === "string") {
             files = [main];
         }
     }
@@ -148,7 +152,7 @@ const getModuleMainFiles = function (modulePath, moduleConf, option) {
     return files;
 };
 
-const getModuleBrowserFiles = function (modulePath, moduleConf, option) {
+const getModuleBrowserFiles = function(modulePath, moduleConf, option) {
     //https://docs.npmjs.com/files/package.json#browser
     //If your module is meant to be used client-side 
     //the browser field should be used instead of the main field. 
@@ -162,7 +166,7 @@ const getModuleBrowserFiles = function (modulePath, moduleConf, option) {
     //"browser": "d3.js"
     if (Array.isArray(browser)) {
         files = browser;
-    } else if (typeof (browser) === "string") {
+    } else if (typeof(browser) === "string") {
         files = [browser];
     }
     if (files) {
@@ -173,7 +177,7 @@ const getModuleBrowserFiles = function (modulePath, moduleConf, option) {
     }
     //object case, require handle module name
     let hasFiles = false;
-    Object.keys(browser).forEach(function (name) {
+    Object.keys(browser).forEach(function(name) {
         let file = browser[name];
         if (!file) {
             return;
@@ -194,7 +198,7 @@ const getModuleBrowserFiles = function (modulePath, moduleConf, option) {
     }
 };
 
-const getModuleOverrideFiles = function (modulePath, moduleConf, option) {
+const getModuleOverrideFiles = function(modulePath, moduleConf, option) {
     const moduleName = moduleConf.name;
     if (!option.overrides.hasOwnProperty(moduleName)) {
         return;
@@ -207,7 +211,7 @@ const getModuleOverrideFiles = function (modulePath, moduleConf, option) {
     //only handle array and string, not object (for merge)
     if (Array.isArray(override)) {
         files = override;
-    } else if (typeof (override) === "string") {
+    } else if (typeof(override) === "string") {
         files = [override];
     }
     if (files) {
@@ -218,7 +222,7 @@ const getModuleOverrideFiles = function (modulePath, moduleConf, option) {
     }
 };
 
-const getModuleFiles = function (modulePath, moduleConf, option) {
+const getModuleFiles = function(modulePath, moduleConf, option) {
     let files = getModuleOverrideFiles(modulePath, moduleConf, option);
     if (files) {
         return files;
@@ -234,14 +238,14 @@ const getModuleFiles = function (modulePath, moduleConf, option) {
     return files;
 };
 
-const getModuleSubs = function (moduleConf, option) {
+const getModuleSubs = function(moduleConf, option) {
 
     const dependencies = getModuleDependencies(moduleConf, option);
     if (!isList(dependencies)) {
         return;
     }
     const subs = [];
-    dependencies.forEach(function (subName) {
+    dependencies.forEach(function(subName) {
         let subInfo = getModuleInfo(subName, option);
         if (subInfo) {
             subs.push(subInfo);
@@ -250,7 +254,7 @@ const getModuleSubs = function (moduleConf, option) {
     return subs;
 };
 
-const getModuleConf = function (modulePath, option) {
+const getModuleConf = function(modulePath, option) {
     //cache conf
     const conf = option.moduleConf[modulePath];
     if (conf) {
@@ -264,7 +268,7 @@ const getModuleConf = function (modulePath, option) {
     }
     //merge overrides if object
     const override = option.overrides[moduleConf.name];
-    if (override && typeof (override) === "object" && !(override instanceof Array)) {
+    if (override && typeof(override) === "object" && !(override instanceof Array)) {
         //deep merge
         moduleConf = Object.assign(moduleConf, override);
     }
@@ -272,7 +276,7 @@ const getModuleConf = function (modulePath, option) {
     return moduleConf;
 };
 
-const getModuleInfo = function (moduleName, option) {
+const getModuleInfo = function(moduleName, option) {
 
     var modulePath = path.resolve(option.nodeModules, moduleName);
     var moduleConf = getModuleConf(modulePath, option);
@@ -308,7 +312,7 @@ const getModuleInfo = function (moduleName, option) {
 
     //require files
     let files = getModuleFiles(modulePath, moduleConf, option);
-    if (typeof (option.onFiles) === "function") {
+    if (typeof(option.onFiles) === "function") {
         files = option.onFiles(files, moduleConf, option);
     }
     moduleInfo.files = files;
@@ -320,7 +324,7 @@ const getModuleInfo = function (moduleName, option) {
     return moduleInfo;
 };
 
-const generateDependencies = function (moduleConf, option) {
+const generateDependencies = function(moduleConf, option) {
 
     const moduleTree = [];
     //generate dependencies
@@ -329,7 +333,7 @@ const generateDependencies = function (moduleConf, option) {
         moduleDependencies = option.include.concat(moduleDependencies);
     }
     if (isList(moduleDependencies)) {
-        moduleDependencies.forEach(function (moduleName) {
+        moduleDependencies.forEach(function(moduleName) {
             const info = getModuleInfo(moduleName, option);
             if (info && !info.deduped) {
                 moduleTree.push(info);
@@ -361,7 +365,7 @@ const generateDependencies = function (moduleConf, option) {
 
 //=====================================================================================
 
-const getOption = function (option) {
+const getOption = function(option) {
     return Object.assign({
         silent: true,
         entry: process.cwd(),
@@ -371,10 +375,10 @@ const getOption = function (option) {
         include: [],
         overrides: {},
         dependencies: {},
-        onDependencies: function (dependencies, moduleConf, option) {
+        onDependencies: function(dependencies, moduleConf, option) {
             return dependencies;
         },
-        onFiles: function (files, moduleConf, option) {
+        onFiles: function(files, moduleConf, option) {
             return files;
         }
     }, option, {
@@ -385,7 +389,7 @@ const getOption = function (option) {
     });
 };
 
-const getNodeModulesPath = function (option) {
+const getNodeModulesPath = function(option) {
     //init node_modules path
     let nodeModules = option.nodeModules;
     if (!nodeModules) {
@@ -409,7 +413,7 @@ const getNodeModulesPath = function (option) {
     return nodeModules;
 };
 
-const getTargetPath = function (option) {
+const getTargetPath = function(option) {
     let target = option.target;
     if (!target) {
         target = option.entry;
@@ -418,7 +422,7 @@ const getTargetPath = function (option) {
     return target;
 };
 
-const flatdep = function (option) {
+const flatdep = function(option) {
     option = getOption(option);
     option.cwd = process.cwd();
 
@@ -467,7 +471,7 @@ flatdep.getModuleSubs = getModuleSubs;
 flatdep.getNodeModulesPath = getNodeModulesPath;
 flatdep.consoleGrid = consoleGrid;
 flatdep.CGS = CGS;
-flatdep.printModuleTree = function (data) {
+flatdep.printModuleTree = function(data) {
     if (!data || !data.moduleTree) {
         console.log(CGS.red("ERROR: Invalid print data."));
         return;
@@ -486,7 +490,7 @@ flatdep.printModuleTree = function (data) {
         }, {
             id: "name",
             name: "Status",
-            formatter: function (v, item) {
+            formatter: function(v, item) {
                 if (item.ignore) {
                     return CGS.yellow("ignore");
                 }
@@ -499,7 +503,7 @@ flatdep.printModuleTree = function (data) {
     });
 };
 
-flatdep.printModuleFiles = function (data) {
+flatdep.printModuleFiles = function(data) {
     if (!data || !data.files) {
         console.log(CGS.red("ERROR: Invalid print data."));
         return;
@@ -528,7 +532,7 @@ flatdep.printModuleFiles = function (data) {
             id: "cg_index",
             name: "NO.",
             align: "right",
-            formatter: function (v) {
+            formatter: function(v) {
                 return v + 1;
             }
         }, {
@@ -543,7 +547,7 @@ flatdep.printModuleFiles = function (data) {
     });
 };
 
-flatdep.print = function (data) {
+flatdep.print = function(data) {
     flatdep.printModuleTree(data);
     flatdep.printModuleFiles(data);
 };
