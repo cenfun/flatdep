@@ -56,5 +56,5 @@ node test.js
 
 # Changelog
 
-- v1.0.2
-    - added target path
+- v1.1.0
+    - added exclude/include
