@@ -113,11 +113,8 @@ const getModuleFilePath = function (modulePath, file, option) {
         return;
     }
 
-    //stats file info
-
-
     //relative path
-    var filePath = path.relative(option.packageJsonPath, absMainPath);
+    var filePath = path.relative(option.target, absMainPath);
     filePath = formatPath(filePath);
     return filePath;
 };
@@ -276,7 +273,7 @@ const getModuleConf = function (modulePath, option) {
 
 const getModuleInfo = function (moduleName, option) {
 
-    var modulePath = path.resolve(option.nodeModulesPath, moduleName);
+    var modulePath = path.resolve(option.nodeModules, moduleName);
     var moduleConf = getModuleConf(modulePath, option);
     if (!moduleConf) {
         return;
@@ -347,8 +344,9 @@ const generateDependencies = function (moduleConf, option) {
 
     Object.assign(option.data, {
         name: option.name,
-        packageJsonPath: option.packageJsonPath,
-        nodeModulesPath: option.nodeModulesPath,
+        entry: option.entry,
+        target: option.target,
+        nodeModules: option.nodeModules,
         modules: modules,
         files: files,
         moduleFiles: moduleFiles,
@@ -362,8 +360,9 @@ const generateDependencies = function (moduleConf, option) {
 const getOption = function (option) {
     return Object.assign({
         silent: true,
-        packageJsonPath: process.cwd(),
-        nodeModulesPath: "",
+        entry: process.cwd(),
+        target: "",
+        nodeModules: "",
         ignores: [],
         overrides: {},
         onDependencies: function (dependencies, moduleConf, option) {
@@ -382,26 +381,34 @@ const getOption = function (option) {
 
 const getNodeModulesPath = function (option) {
     //init node_modules path
-    let nodeModulesPath = option.nodeModulesPath;
-    if (!nodeModulesPath) {
-        nodeModulesPath = option.packageJsonPath;
+    let nodeModules = option.nodeModules;
+    if (!nodeModules) {
+        nodeModules = option.entry;
     }
-    if (path.basename(nodeModulesPath) !== "node_modules") {
+    if (path.basename(nodeModules) !== "node_modules") {
         //Double insurance
         let i = 0;
         //detect child and parents
-        while (!fs.existsSync(path.resolve(nodeModulesPath, "node_modules"))) {
-            const parent = path.resolve(nodeModulesPath, "../");
-            if (parent === nodeModulesPath || i > 10) {
+        while (!fs.existsSync(path.resolve(nodeModules, "node_modules"))) {
+            const parent = path.resolve(nodeModules, "../");
+            if (parent === nodeModules || i > 10) {
                 break;
             }
-            nodeModulesPath = parent;
+            nodeModules = parent;
             i += 1;
         }
-        nodeModulesPath = path.resolve(nodeModulesPath, "node_modules");
+        nodeModules = path.resolve(nodeModules, "node_modules");
     }
-    nodeModulesPath = formatPath(path.relative(option.cwd, nodeModulesPath));
-    return nodeModulesPath;
+    nodeModules = formatPath(path.relative(option.cwd, nodeModules));
+    return nodeModules;
+};
+
+const getTargetPath = function (option) {
+    let target = option.target;
+    if (!target) {
+        target = option.entry;
+    }
+    return target;
 };
 
 const flatdep = function (option) {
@@ -409,24 +416,24 @@ const flatdep = function (option) {
     option.cwd = process.cwd();
 
     //init package json path
-    let packageJsonPath = path.resolve(option.packageJsonPath);
-    if (!fs.existsSync(packageJsonPath)) {
-        option.data.error = "ERROR: Not found: " + packageJsonPath;
+    let entry = path.resolve(option.entry);
+    if (!fs.existsSync(entry)) {
+        option.data.error = "ERROR: Not found: " + entry;
         return option.data;
     }
 
-    const pj = fs.statSync(packageJsonPath);
+    const pj = fs.statSync(entry);
     if (pj.isFile()) {
-        packageJsonPath = path.dirname(packageJsonPath);
+        entry = path.dirname(entry);
     }
-    packageJsonPath = formatPath(path.relative(option.cwd, packageJsonPath));
+    entry = formatPath(path.relative(option.cwd, entry));
     //read module config
-    const moduleConf = getModuleConf(packageJsonPath, option);
+    const moduleConf = getModuleConf(entry, option);
     if (!moduleConf) {
-        option.data.error = "ERROR: Failed to read: " + packageJsonPath;
+        option.data.error = "ERROR: Failed to read: " + entry;
         return option.data;
     }
-    option.packageJsonPath = packageJsonPath;
+    option.entry = entry;
 
     option.name = moduleConf.name;
     //merge browser as overrides
@@ -434,12 +441,14 @@ const flatdep = function (option) {
         option.overrides = Object.assign({}, moduleConf.browser, option.overrides);
     }
 
-    const nodeModulesPath = getNodeModulesPath(option);
-    if (!fs.existsSync(nodeModulesPath)) {
-        option.data.error = "ERROR: Not found: " + nodeModulesPath;
+    option.target = getTargetPath(option);
+
+    const nodeModules = getNodeModulesPath(option);
+    if (!fs.existsSync(nodeModules)) {
+        option.data.error = "ERROR: Not found: " + nodeModules;
         return option.data;
     }
-    option.nodeModulesPath = nodeModulesPath;
+    option.nodeModules = nodeModules;
 
     generateDependencies(moduleConf, option);
 
@@ -490,8 +499,8 @@ flatdep.printModuleFiles = function (data) {
     const files = JSON.parse(JSON.stringify(data.files));
 
     const rows = files.map(item => {
-        let p = path.resolve(data.packageJsonPath, item);
-        let file = formatPath(path.relative(data.nodeModulesPath, p));
+        let p = path.resolve(data.target, item);
+        let file = formatPath(path.relative(data.nodeModules, p));
         let size;
         if (fs.existsSync(p)) {
             size = fs.statSync(p).size;
@@ -514,7 +523,7 @@ flatdep.printModuleFiles = function (data) {
             }
         }, {
             id: "file",
-            name: "Files (" + data.nodeModulesPath + ")",
+            name: "Files (" + formatPath(path.relative(data.target, data.nodeModules)) + ")",
             maxWidth: 80
         }, {
             id: "size",

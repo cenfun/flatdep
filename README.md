@@ -13,10 +13,17 @@ npm i flatdep
 ```js
 const flatdep = require("flatdep");
 const d = flatdep({
+    //stop log message
     silent: false,
-    packageJsonPath: "../flatdep-test",
-    nodeModulesPath: "",
+    //project entry path (package.json folder)
+    entry: "../flatdep-test",
+    //target runtime path to files
+    target: "../flatdep-test/demo",
+    //node_modules path to detect dependencies
+    nodeModules: "",
+    //ignore modules
     ignores: ["jquery-ui"],
+    //override module config
     overrides: {
         jquery: {
             main: "dist/jquery.min.js"
@@ -35,7 +42,6 @@ const d = flatdep({
 if (d.error) {
     console.log(d.error);
 }
-//require("fs").writeFileSync(".temp/module-tree.json", JSON.stringify(d, null, 4));
 //console.log(d.modules);
 //console.log(d.files);
 flatdep.print(d);
@@ -46,3 +52,8 @@ flatdep.print(d);
 ```sh
 node test.js
 ```
+
+# Changelog
+
+- v1.0.2
+    - added target path
