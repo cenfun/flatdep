@@ -125,7 +125,7 @@ const filterFileList = function (files, modulePath, option) {
     return files;
 };
 
-const getModuleMainFiles = function (moduleName, modulePath, moduleConf, option) {
+const getModuleMainFiles = function (modulePath, moduleConf, option) {
     //https://docs.npmjs.com/files/package.json#main
     let files = [];
     var main = moduleConf.main;
@@ -148,7 +148,7 @@ const getModuleMainFiles = function (moduleName, modulePath, moduleConf, option)
     return files;
 };
 
-const getModuleBrowserFiles = function (moduleName, modulePath, moduleConf, option) {
+const getModuleBrowserFiles = function (modulePath, moduleConf, option) {
     //https://docs.npmjs.com/files/package.json#browser
     //If your module is meant to be used client-side 
     //the browser field should be used instead of the main field. 
@@ -194,7 +194,8 @@ const getModuleBrowserFiles = function (moduleName, modulePath, moduleConf, opti
     }
 };
 
-const getModuleOverrideFiles = function (moduleName, modulePath, moduleConf, option) {
+const getModuleOverrideFiles = function (modulePath, moduleConf, option) {
+    const moduleName = moduleConf.name;
     if (!option.overrides.hasOwnProperty(moduleName)) {
         return;
     }
@@ -217,23 +218,23 @@ const getModuleOverrideFiles = function (moduleName, modulePath, moduleConf, opt
     }
 };
 
-const getModuleFiles = function (moduleName, modulePath, moduleConf, option) {
-    let files = getModuleOverrideFiles(moduleName, modulePath, moduleConf, option);
+const getModuleFiles = function (modulePath, moduleConf, option) {
+    let files = getModuleOverrideFiles(modulePath, moduleConf, option);
     if (files) {
         return files;
     }
-    files = getModuleBrowserFiles(moduleName, modulePath, moduleConf, option);
+    files = getModuleBrowserFiles(modulePath, moduleConf, option);
     if (files) {
         return files;
     }
-    files = getModuleMainFiles(moduleName, modulePath, moduleConf, option);
+    files = getModuleMainFiles(modulePath, moduleConf, option);
     if (!isList(files)) {
-        addLog(CGS.yellow("WARN: Not found module file(s) in " + moduleName + "/package.json, check fields 'browser' or 'main'."), option);
+        addLog(CGS.yellow("WARN: Not found module file(s) in " + moduleConf.name + "/package.json, check fields 'browser' or 'main'."), option);
     }
     return files;
 };
 
-const getModuleSubs = function (moduleName, moduleConf, option) {
+const getModuleSubs = function (moduleConf, option) {
 
     const dependencies = getModuleDependencies(moduleConf, option);
     if (!isList(dependencies)) {
@@ -300,13 +301,13 @@ const getModuleInfo = function (moduleName, option) {
     }
 
     //get subs before module files
-    const subs = getModuleSubs(moduleName, moduleConf, option);
+    const subs = getModuleSubs(moduleConf, option);
     if (subs) {
         moduleInfo.subs = subs;
     }
 
     //require files
-    let files = getModuleFiles(moduleName, modulePath, moduleConf, option);
+    let files = getModuleFiles(modulePath, moduleConf, option);
     if (typeof (option.onFiles) === "function") {
         files = option.onFiles(files, moduleConf, option);
     }
@@ -455,6 +456,9 @@ const flatdep = function (option) {
     return option.data;
 };
 
+flatdep.getModuleFiles = getModuleFiles;
+flatdep.getModuleSubs = getModuleSubs;
+flatdep.getNodeModulesPath = getNodeModulesPath;
 flatdep.consoleGrid = consoleGrid;
 flatdep.CGS = CGS;
 flatdep.printModuleTree = function (data) {
