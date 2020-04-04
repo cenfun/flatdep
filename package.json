@@ -1,7 +1,7 @@
 {
   "name": "flatdep",
   "version": "1.0.1",
-  "description": "flat dependencies",
+  "description": "flat dependencies files",
   "main": "index.js",
   "scripts": {
     "test": "node test.js"
@@ -9,7 +9,7 @@
   "files": ["index.js"],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cenfun/flatdep.git"
+    "url": "https://github.com/cenfun/flatdep.git"
   },
   "dependencies": {
     "console-grid": "^1.0.16"

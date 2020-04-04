@@ -1,6 +1,6 @@
 # flatdep
 
-Tool to generate flat dependencies files
+A tool to generate flat dependencies files
 
 # Install
 
