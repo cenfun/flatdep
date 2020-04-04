@@ -414,6 +414,7 @@ const getTargetPath = function (option) {
     if (!target) {
         target = option.entry;
     }
+    target = formatPath(path.relative(option.cwd, target));
     return target;
 };
 
