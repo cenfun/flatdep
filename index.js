@@ -20,6 +20,36 @@ const isList = function (data) {
     return false;
 };
 
+const toBytes = function (bytes) {
+
+    bytes = Math.max(bytes, 0);
+
+    var k = 1024;
+    if (bytes < k) {
+        return `${bytes} B`;
+    }
+    var m = k * k;
+    if (bytes < m) {
+        var mStr = `${Math.round(bytes / k * 100) / 100} KB`;
+        if (bytes < 200 * k) {
+            return mStr;
+        }
+        return CGS.yellow(mStr);
+    }
+    var g = m * k;
+    if (bytes < g) {
+        var gStr = `${Math.round(bytes / m * 100) / 100} MB`;
+        return CGS.red(gStr);
+    }
+    var t = g * k;
+    if (bytes < t) {
+        var tStr = `${Math.round(bytes / g * 100) / 100} GB`;
+        return CGS.red(tStr);
+    }
+
+    return bytes;
+};
+
 const readFileContentSync = function (filePath) {
     var content = null;
     var isExists = fs.existsSync(filePath);
@@ -41,16 +71,33 @@ const readJSONSync = function (filePath) {
     return json;
 };
 
+const addLog = function (msg, option) {
+    if (option.silent) {
+        return;
+    }
+    console.log(msg);
+};
+
 //=====================================================================================
 
+const addModuleFiles = function (name, files, option) {
+    if (option.ignores.includes(name)) {
+        return false;
+    }
+    if (!isList(files)) {
+        return false;
+    }
+    option.moduleFiles[name] = files;
+    return true;
+};
+
 const getModuleDependencies = function (moduleConf, option) {
-    const moduleName = moduleConf.name;
     let dependencies = [];
     if (moduleConf.dependencies) {
         dependencies = Object.keys(moduleConf.dependencies);
     }
     if (typeof (option.onDependencies) === "function") {
-        dependencies = option.onDependencies(dependencies, moduleName);
+        dependencies = option.onDependencies(dependencies, moduleConf, option);
     }
     return dependencies;
 };
@@ -63,12 +110,23 @@ const getModuleFilePath = function (modulePath, file, option) {
         absMainPath += ".js";
     }
     if (!fs.existsSync(absMainPath)) {
+        addLog(CGS.red("ERROR: Not found file: " + absMainPath), option);
         return;
     }
+
+    //stats file info
+
+
     //relative path
     var filePath = path.relative(option.packageJsonPath, absMainPath);
     filePath = formatPath(filePath);
     return filePath;
+};
+
+const filterFileList = function (files, modulePath, option) {
+    files = files.map(file => getModuleFilePath(modulePath, file, option));
+    files = files.filter(item => item);
+    return files;
 };
 
 const getModuleMainFiles = function (moduleName, modulePath, moduleConf, option) {
@@ -90,8 +148,7 @@ const getModuleMainFiles = function (moduleName, modulePath, moduleConf, option)
     if (!files.length) {
         files = ["index.js"];
     }
-    files = files.map(file => getModuleFilePath(modulePath, file, option));
-    files = files.filter(item => item);
+    files = filterFileList(files, modulePath, option);
     return files;
 };
 
@@ -104,8 +161,22 @@ const getModuleBrowserFiles = function (moduleName, modulePath, moduleConf, opti
     if (!browser) {
         return;
     }
-    //object for browser
-    let files = [];
+    let files;
+    //array and string case 
+    //"browser": "d3.js"
+    if (Array.isArray(browser)) {
+        files = browser;
+    } else if (typeof (browser) === "string") {
+        files = [browser];
+    }
+    if (files) {
+        files = filterFileList(files, modulePath, option);
+        if (files.length) {
+            return files;
+        }
+    }
+    //object case, require handle module name
+    let hasFiles = false;
     Object.keys(browser).forEach(function (name) {
         let file = browser[name];
         if (!file) {
@@ -116,11 +187,14 @@ const getModuleBrowserFiles = function (moduleName, modulePath, moduleConf, opti
             return;
         }
         //cache browser modules
-        option.moduleFiles[name] = [filePath];
-        files.push(filePath);
+        const done = addModuleFiles(name, [filePath], option);
+        if (done) {
+            hasFiles = true;
+        }
     });
-    if (files.length) {
-        return files;
+    if (hasFiles) {
+        //browser files already added to global moduleFiles, so just return empty array
+        return [];
     }
 };
 
@@ -133,15 +207,14 @@ const getModuleOverrideFiles = function (moduleName, modulePath, moduleConf, opt
         return [];
     }
     let files;
-    //only handle array and string, not object
+    //only handle array and string, not object (for merge)
     if (Array.isArray(override)) {
         files = override;
     } else if (typeof (override) === "string") {
         files = [override];
     }
     if (files) {
-        files = files.map(file => getModuleFilePath(modulePath, file, option));
-        files = files.filter(item => item);
+        files = filterFileList(files, modulePath, option);
         if (files.length) {
             return files;
         }
@@ -155,12 +228,11 @@ const getModuleFiles = function (moduleName, modulePath, moduleConf, option) {
     }
     files = getModuleBrowserFiles(moduleName, modulePath, moduleConf, option);
     if (files) {
-        //browser files already added
-        return [];
+        return files;
     }
     files = getModuleMainFiles(moduleName, modulePath, moduleConf, option);
     if (!isList(files)) {
-        console.log(CGS.yellow("WARN: Not found module file(s) in " + moduleName + "/package.json, check fields 'browser' or 'main'."));
+        addLog(CGS.yellow("WARN: Not found module file(s) in " + moduleName + "/package.json, check fields 'browser' or 'main'."), option);
     }
     return files;
 };
@@ -190,9 +262,7 @@ const getModuleConf = function (modulePath, option) {
     const depItemJsonPath = path.resolve(modulePath, "package.json");
     let moduleConf = readJSONSync(depItemJsonPath);
     if (!moduleConf) {
-        if (!option.silent) {
-            console.log(CGS.red("ERROR: Failed to read: " + depItemJsonPath));
-        }
+        addLog(CGS.red("ERROR: Failed to read: " + depItemJsonPath), option);
         return;
     }
     //merge overrides if object
@@ -215,18 +285,23 @@ const getModuleInfo = function (moduleName, option) {
 
     const moduleInfo = {
         name: moduleConf.name,
-        version: moduleConf.version,
-        deduped: ""
+        version: moduleConf.version
     };
 
     //already done
     if (option.moduleMap[moduleName]) {
-        moduleInfo.deduped = "deduped";
+        moduleInfo.deduped = true;
         return moduleInfo;
     }
 
     //cache module info first 
     option.moduleMap[moduleName] = true;
+
+    //ignore module from option.ignores
+    if (option.ignores.includes(moduleName)) {
+        moduleInfo.ignore = true;
+        return moduleInfo;
+    }
 
     //get subs before module files
     const subs = getModuleSubs(moduleName, moduleConf, option);
@@ -235,32 +310,17 @@ const getModuleInfo = function (moduleName, option) {
     }
 
     //require files
-    const files = getModuleFiles(moduleName, modulePath, moduleConf, option);
+    let files = getModuleFiles(moduleName, modulePath, moduleConf, option);
+    if (typeof (option.onFiles) === "function") {
+        files = option.onFiles(files, moduleConf, option);
+    }
     moduleInfo.files = files;
-    if (isList(files)) {
-        option.moduleFiles[moduleName] = files;
+    const done = addModuleFiles(moduleName, files, option);
+    if (!done) {
+        //ignore no files
+        moduleInfo.ignore = true;
     }
     return moduleInfo;
-};
-
-const showModuleTree = function (moduleTree, option) {
-    if (option.silent) {
-        return;
-    }
-    console.log("Module Tree:");
-    consoleGrid.render({
-        rows: moduleTree,
-        columns: [{
-            id: "name",
-            name: "Module Name"
-        }, {
-            id: "version",
-            name: "Version"
-        }, {
-            id: "deduped",
-            name: "Deduped"
-        }]
-    });
 };
 
 const generateDependencies = function (moduleConf, option) {
@@ -277,8 +337,6 @@ const generateDependencies = function (moduleConf, option) {
         });
     }
 
-    showModuleTree(JSON.parse(JSON.stringify(moduleTree)), option);
-
     const moduleFiles = option.moduleFiles;
     const modules = Object.keys(moduleFiles);
     const files = [];
@@ -289,6 +347,9 @@ const generateDependencies = function (moduleConf, option) {
     });
 
     return {
+        name: option.name,
+        packageJsonPath: option.packageJsonPath,
+        nodeModulesPath: option.nodeModulesPath,
         modules: modules,
         files: files,
         moduleFiles: moduleFiles,
@@ -304,9 +365,13 @@ const getOption = function (option) {
         silent: true,
         packageJsonPath: process.cwd(),
         nodeModulesPath: "",
+        ignores: [],
         overrides: {},
-        onDependencies: function (dependencies, moduleName) {
+        onDependencies: function (dependencies, moduleConf, option) {
             return dependencies;
+        },
+        onFiles: function (files, moduleConf, option) {
+            return files;
         }
     }, option, {
         moduleConf: {},
@@ -315,8 +380,9 @@ const getOption = function (option) {
     });
 };
 
-module.exports = async (option) => {
+const flatdep = async (option) => {
     option = getOption(option);
+    option.cwd = process.cwd();
 
     //init package json path
     let packageJsonPath = path.resolve(option.packageJsonPath);
@@ -327,7 +393,17 @@ module.exports = async (option) => {
     if (pj.isFile()) {
         packageJsonPath = path.dirname(packageJsonPath);
     }
-    //console.log("packageJsonPath: " + packageJsonPath);
+    packageJsonPath = formatPath(path.relative(option.cwd, packageJsonPath));
+    //read module config
+    const moduleConf = getModuleConf(packageJsonPath, option);
+    assert(moduleConf, "ERROR: Failed to read: " + packageJsonPath);
+    option.packageJsonPath = packageJsonPath;
+
+    option.name = moduleConf.name;
+    //merge browser as overrides
+    if (moduleConf.browser) {
+        option.overrides = Object.assign({}, moduleConf.browser, option.overrides);
+    }
 
     //init node_modules path
     let nodeModulesPath = option.nodeModulesPath;
@@ -335,22 +411,103 @@ module.exports = async (option) => {
         nodeModulesPath = packageJsonPath;
     }
     if (path.basename(nodeModulesPath) !== "node_modules") {
+        //Double insurance
+        let i = 0;
+        //detect child and parents
+        while (!fs.existsSync(path.resolve(nodeModulesPath, "node_modules"))) {
+            const parent = path.resolve(nodeModulesPath, "../");
+            if (parent === nodeModulesPath || i > 10) {
+                break;
+            }
+            nodeModulesPath = parent;
+            i += 1;
+        }
         nodeModulesPath = path.resolve(nodeModulesPath, "node_modules");
     }
-
-    assert(fs.existsSync(nodeModulesPath), "ERROR: Not found node_modules: " + nodeModulesPath);
-
+    nodeModulesPath = formatPath(path.relative(option.cwd, nodeModulesPath));
+    assert(fs.existsSync(nodeModulesPath), "ERROR: Not found: " + nodeModulesPath);
     option.nodeModulesPath = nodeModulesPath;
-    //console.log("nodeModulesPath: " + nodeModulesPath);
-
-    //read module config
-    const moduleConf = getModuleConf(packageJsonPath, option);
-    assert(moduleConf, "ERROR: Failed to read: " + packageJsonPath);
-
-    //merge browser as overrides
-    if (moduleConf.browser) {
-        option.overrides = Object.assign({}, moduleConf.browser, option.overrides);
-    }
 
     return generateDependencies(moduleConf, option);
 };
+
+flatdep.consoleGrid = consoleGrid;
+flatdep.CGS = CGS;
+flatdep.printModuleTree = function (data) {
+    assert(data, "ERROR: Invalid print data.");
+    assert(data.moduleTree, "ERROR: Invalid print moduleTree.");
+
+    console.log(CGS.cyan("[" + data.name + "]") + " Module Tree:");
+    const moduleTree = JSON.parse(JSON.stringify(data.moduleTree));
+    consoleGrid.render({
+        rows: moduleTree,
+        columns: [{
+            id: "name",
+            name: "Module Name"
+        }, {
+            id: "version",
+            name: "Version"
+        }, {
+            id: "name",
+            name: "Status",
+            formatter: function (v, item) {
+                if (item.ignore) {
+                    return CGS.yellow("ignore");
+                }
+                if (item.deduped) {
+                    return "deduped";
+                }
+                return "";
+            }
+        }]
+    });
+};
+
+flatdep.printModuleFiles = function (data) {
+    assert(data, "ERROR: Invalid print data.");
+    assert(data.files, "ERROR: Invalid print files.");
+
+    console.log(CGS.cyan("[" + data.name + "]") + " Module Files:");
+    const files = JSON.parse(JSON.stringify(data.files));
+
+    const rows = files.map(item => {
+        let p = path.resolve(data.packageJsonPath, item);
+        let file = formatPath(path.relative(data.nodeModulesPath, p));
+        let size;
+        if (fs.existsSync(p)) {
+            size = fs.statSync(p).size;
+            size = toBytes(size);
+        }
+        return {
+            file: file,
+            size: size
+        };
+    });
+
+    consoleGrid.render({
+        rows: rows,
+        columns: [{
+            id: "cg_index",
+            name: "NO.",
+            align: "right",
+            formatter: function (v) {
+                return v + 1;
+            }
+        }, {
+            id: "file",
+            name: "Files (" + data.nodeModulesPath + ")",
+            maxWidth: 80
+        }, {
+            id: "size",
+            name: "Size",
+            align: "right"
+        }]
+    });
+};
+
+flatdep.print = function (data) {
+    flatdep.printModuleTree(data);
+    flatdep.printModuleFiles(data);
+};
+
+module.exports = flatdep;

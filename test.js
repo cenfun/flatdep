@@ -1,17 +1,23 @@
 const flatdep = require("./");
 flatdep({
     silent: false,
-    packageJsonPath: "../flatdep-test",
+    packageJsonPath: "./",
     nodeModulesPath: "",
+    ignores: ["jquery-ui"],
     overrides: {
-        i18next: "",
-        xlsx: {
-            dependencies: null
-        },
-        vue: "dist/vue.min.js"
+        jquery: {
+            main: "dist/jquery.min.js"
+        }
     }
 }).then(function (d) {
-    console.log(d);
+
+    //require("fs").writeFileSync(".temp/module-tree.json", JSON.stringify(d, null, 4));
+
+    //console.log(d.modules);
+    //console.log(d.files);
+
+    flatdep.print(d);
+
 }, function (e) {
     console.log(e);
 });
