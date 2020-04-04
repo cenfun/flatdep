@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const assert = require("assert");
 const ConsoleGrid = require("console-grid");
 const CGS = ConsoleGrid.Style;
 const consoleGrid = new ConsoleGrid();
@@ -346,7 +345,7 @@ const generateDependencies = function (moduleConf, option) {
         }
     });
 
-    return {
+    Object.assign(option.data, {
         name: option.name,
         packageJsonPath: option.packageJsonPath,
         nodeModulesPath: option.nodeModulesPath,
@@ -354,7 +353,7 @@ const generateDependencies = function (moduleConf, option) {
         files: files,
         moduleFiles: moduleFiles,
         moduleTree: moduleTree
-    };
+    });
 
 };
 
@@ -376,39 +375,16 @@ const getOption = function (option) {
     }, option, {
         moduleConf: {},
         moduleMap: {},
-        moduleFiles: {}
+        moduleFiles: {},
+        data: {}
     });
 };
 
-const flatdep = async (option) => {
-    option = getOption(option);
-    option.cwd = process.cwd();
-
-    //init package json path
-    let packageJsonPath = path.resolve(option.packageJsonPath);
-
-    assert(fs.existsSync(packageJsonPath), "ERROR: Not found: " + packageJsonPath);
-
-    const pj = fs.statSync(packageJsonPath);
-    if (pj.isFile()) {
-        packageJsonPath = path.dirname(packageJsonPath);
-    }
-    packageJsonPath = formatPath(path.relative(option.cwd, packageJsonPath));
-    //read module config
-    const moduleConf = getModuleConf(packageJsonPath, option);
-    assert(moduleConf, "ERROR: Failed to read: " + packageJsonPath);
-    option.packageJsonPath = packageJsonPath;
-
-    option.name = moduleConf.name;
-    //merge browser as overrides
-    if (moduleConf.browser) {
-        option.overrides = Object.assign({}, moduleConf.browser, option.overrides);
-    }
-
+const getNodeModulesPath = function (option) {
     //init node_modules path
     let nodeModulesPath = option.nodeModulesPath;
     if (!nodeModulesPath) {
-        nodeModulesPath = packageJsonPath;
+        nodeModulesPath = option.packageJsonPath;
     }
     if (path.basename(nodeModulesPath) !== "node_modules") {
         //Double insurance
@@ -425,17 +401,58 @@ const flatdep = async (option) => {
         nodeModulesPath = path.resolve(nodeModulesPath, "node_modules");
     }
     nodeModulesPath = formatPath(path.relative(option.cwd, nodeModulesPath));
-    assert(fs.existsSync(nodeModulesPath), "ERROR: Not found: " + nodeModulesPath);
+    return nodeModulesPath;
+};
+
+const flatdep = function (option) {
+    option = getOption(option);
+    option.cwd = process.cwd();
+
+    //init package json path
+    let packageJsonPath = path.resolve(option.packageJsonPath);
+    if (!fs.existsSync(packageJsonPath)) {
+        option.data.error = "ERROR: Not found: " + packageJsonPath;
+        return option.data;
+    }
+
+    const pj = fs.statSync(packageJsonPath);
+    if (pj.isFile()) {
+        packageJsonPath = path.dirname(packageJsonPath);
+    }
+    packageJsonPath = formatPath(path.relative(option.cwd, packageJsonPath));
+    //read module config
+    const moduleConf = getModuleConf(packageJsonPath, option);
+    if (!moduleConf) {
+        option.data.error = "ERROR: Failed to read: " + packageJsonPath;
+        return option.data;
+    }
+    option.packageJsonPath = packageJsonPath;
+
+    option.name = moduleConf.name;
+    //merge browser as overrides
+    if (moduleConf.browser) {
+        option.overrides = Object.assign({}, moduleConf.browser, option.overrides);
+    }
+
+    const nodeModulesPath = getNodeModulesPath(option);
+    if (!fs.existsSync(nodeModulesPath)) {
+        option.data.error = "ERROR: Not found: " + nodeModulesPath;
+        return option.data;
+    }
     option.nodeModulesPath = nodeModulesPath;
 
-    return generateDependencies(moduleConf, option);
+    generateDependencies(moduleConf, option);
+
+    return option.data;
 };
 
 flatdep.consoleGrid = consoleGrid;
 flatdep.CGS = CGS;
 flatdep.printModuleTree = function (data) {
-    assert(data, "ERROR: Invalid print data.");
-    assert(data.moduleTree, "ERROR: Invalid print moduleTree.");
+    if (!data || !data.moduleTree) {
+        console.log(CGS.red("ERROR: Invalid print data."));
+        return;
+    }
 
     console.log(CGS.cyan("[" + data.name + "]") + " Module Tree:");
     const moduleTree = JSON.parse(JSON.stringify(data.moduleTree));
@@ -464,8 +481,10 @@ flatdep.printModuleTree = function (data) {
 };
 
 flatdep.printModuleFiles = function (data) {
-    assert(data, "ERROR: Invalid print data.");
-    assert(data.files, "ERROR: Invalid print files.");
+    if (!data || !data.files) {
+        console.log(CGS.red("ERROR: Invalid print data."));
+        return;
+    }
 
     console.log(CGS.cyan("[" + data.name + "]") + " Module Files:");
     const files = JSON.parse(JSON.stringify(data.files));
