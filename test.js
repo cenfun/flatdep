@@ -8,8 +8,9 @@ const d = flatdep({
     target: "../flatdep-test/demo",
     //node_modules path to detect dependencies
     nodeModules: "",
-    //ignore modules
-    ignores: ["jquery-ui"],
+    //exclude/include modules
+    exclude: ["jquery-ui"],
+    include: ["animate.css"],
     //override module config
     overrides: {
         jquery: {

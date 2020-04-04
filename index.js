@@ -80,7 +80,7 @@ const addLog = function (msg, option) {
 //=====================================================================================
 
 const addModuleFiles = function (name, files, option) {
-    if (option.ignores.includes(name)) {
+    if (option.exclude.includes(name)) {
         return false;
     }
     if (!isList(files)) {
@@ -294,8 +294,8 @@ const getModuleInfo = function (moduleName, option) {
     //cache module info first 
     option.moduleMap[moduleName] = true;
 
-    //ignore module from option.ignores
-    if (option.ignores.includes(moduleName)) {
+    //ignore module from option.exclude
+    if (option.exclude.includes(moduleName)) {
         moduleInfo.ignore = true;
         return moduleInfo;
     }
@@ -324,7 +324,10 @@ const generateDependencies = function (moduleConf, option) {
 
     const moduleTree = [];
     //generate dependencies
-    const moduleDependencies = getModuleDependencies(moduleConf, option);
+    let moduleDependencies = getModuleDependencies(moduleConf, option);
+    if (isList(option.include)) {
+        moduleDependencies = option.include.concat(moduleDependencies);
+    }
     if (isList(moduleDependencies)) {
         moduleDependencies.forEach(function (moduleName) {
             const info = getModuleInfo(moduleName, option);
@@ -364,8 +367,10 @@ const getOption = function (option) {
         entry: process.cwd(),
         target: "",
         nodeModules: "",
-        ignores: [],
+        exclude: [],
+        include: [],
         overrides: {},
+        dependencies: {},
         onDependencies: function (dependencies, moduleConf, option) {
             return dependencies;
         },
