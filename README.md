@@ -56,5 +56,8 @@ node test.js
 
 # Changelog
 
+- v1.1.1
+    - fixed link module
+
 - v1.1.0
     - added exclude/include
