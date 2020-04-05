@@ -102,19 +102,29 @@ const getModuleDependencies = function(moduleConf, option) {
 };
 
 const getModuleFilePath = function(modulePath, file, option) {
-    //absolute path
-    let absMainPath = path.resolve(modulePath, file);
-    //if no extname and add .js exists 
-    if (!fs.existsSync(absMainPath) && !path.extname(absMainPath)) {
-        absMainPath += ".js";
+    //no extname and add .js exists 
+    if (!path.extname(file)) {
+        file += ".js";
     }
 
-    //do NOT check link
-    const stats = fs.lstatSync(modulePath);
-    const isLink = stats.isSymbolicLink();
-    if (!isLink && !fs.existsSync(absMainPath)) {
-        addLog(CGS.red("ERROR: Not found file: " + absMainPath), option);
-        return;
+    //absolute path
+    let absMainPath = path.resolve(modulePath, file);
+    if (!fs.existsSync(absMainPath)) {
+        //try base on node modules 
+        let nmPath = path.resolve(option.nodeModules, file);
+        if (fs.existsSync(nmPath)) {
+            absMainPath = nmPath;
+        }
+    }
+
+    if (!fs.existsSync(absMainPath)) {
+        const stats = fs.lstatSync(modulePath);
+        const isLink = stats.isSymbolicLink();
+        //do NOT check link
+        if (!isLink) {
+            addLog(CGS.red("ERROR: Not found file: " + absMainPath), option);
+            return;
+        }
     }
 
     //relative path
