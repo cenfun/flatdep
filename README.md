@@ -56,6 +56,9 @@ node test.js
 
 # Changelog
 
+- v1.1.2
+    - fixed browser override and path
+
 - v1.1.1
     - fixed link module
 
