@@ -176,7 +176,7 @@ const getModuleBrowserFiles = function(modulePath, moduleConf, option) {
         }
     }
     //object case, require handle module name
-    let hasFiles = false;
+    let hasOverride = false;
     Object.keys(browser).forEach(function(name) {
         let file = browser[name];
         if (!file) {
@@ -187,13 +187,14 @@ const getModuleBrowserFiles = function(modulePath, moduleConf, option) {
             return;
         }
         //cache browser modules
-        const done = addModuleFiles(name, [filePath], option);
-        if (done) {
-            hasFiles = true;
+        addModuleFiles(name, [filePath], option);
+        if (name === moduleConf.name) {
+            hasOverride = true;
         }
     });
-    if (hasFiles) {
-        //browser files already added to global moduleFiles, so just return empty array
+    //browser files already added to global moduleFiles
+    //only return if has override module in browser
+    if (hasOverride) {
         return [];
     }
 };
