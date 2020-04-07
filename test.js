@@ -9,21 +9,34 @@ const d = flatdep({
     //node_modules path to detect dependencies
     nodeModules: "",
     //exclude/include modules
-    exclude: ["jquery-ui"],
-    include: ["animate.css"],
+    exclude: ["jquery"],
+    include: [],
     //override module config
     overrides: {
+        "@babel/polyfill": {
+            main: "dist/polyfill.min.js",
+            dependencies: null
+        },
+        axios: {
+            main: "dist/axios.min.js",
+            browser: null,
+            dependencies: null
+        },
+        bootstrap: {
+            main: ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]
+        },
+        d3: {
+            main: "dist/d3.min.js",
+            dependencies: null
+        },
         jquery: {
             main: "dist/jquery.min.js"
         },
-        i18next: {
-            dependencies: null
+        vue: {
+            main: "dist/vue.min.js"
         },
-        "pdf.js": {
-            dependencies: null
-        },
-        xlsx: {
-            dependencies: null
+        "vue-router": {
+            main: "dist/vue-router.min.js"
         }
     }
 });
