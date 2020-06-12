@@ -283,6 +283,9 @@ const getModuleConf = function(modulePath, option) {
         //deep merge
         moduleConf = Object.assign(moduleConf, override);
     }
+    if(option.noBrowser) {
+        delete moduleConf.browser;
+    }
     option.moduleConf[modulePath] = moduleConf;
     return moduleConf;
 };
@@ -379,6 +382,7 @@ const generateDependencies = function(moduleConf, option) {
 const getOption = function(option) {
     return Object.assign({
         silent: true,
+        noBrowser: false,
         entry: process.cwd(),
         target: "",
         nodeModules: "",

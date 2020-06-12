@@ -2,6 +2,8 @@ const flatdep = require("./");
 const d = flatdep({
     //stop log message
     silent: false,
+    //no browser
+    noBrowser: false,
     //project entry path (package.json folder)
     entry: "../flatdep-test",
     //target runtime path to files
