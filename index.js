@@ -23,26 +23,26 @@ const toBytes = function(bytes) {
 
     bytes = Math.max(bytes, 0);
 
-    var k = 1024;
+    const k = 1024;
     if (bytes < k) {
         return `${bytes} B`;
     }
-    var m = k * k;
+    const m = k * k;
     if (bytes < m) {
-        var mStr = `${Math.round(bytes / k * 100) / 100} KB`;
+        const mStr = `${Math.round(bytes / k * 100) / 100} KB`;
         if (bytes < 200 * k) {
             return mStr;
         }
         return CGS.yellow(mStr);
     }
-    var g = m * k;
+    const g = m * k;
     if (bytes < g) {
-        var gStr = `${Math.round(bytes / m * 100) / 100} MB`;
+        const gStr = `${Math.round(bytes / m * 100) / 100} MB`;
         return CGS.red(gStr);
     }
-    var t = g * k;
+    const t = g * k;
     if (bytes < t) {
-        var tStr = `${Math.round(bytes / g * 100) / 100} GB`;
+        const tStr = `${Math.round(bytes / g * 100) / 100} GB`;
         return CGS.red(tStr);
     }
 
@@ -50,20 +50,20 @@ const toBytes = function(bytes) {
 };
 
 const readFileContentSync = function(filePath) {
-    var content = null;
-    var isExists = fs.existsSync(filePath);
+    let content = null;
+    const isExists = fs.existsSync(filePath);
     if (isExists) {
         content = fs.readFileSync(filePath);
         if (Buffer.isBuffer(content)) {
-            content = content.toString('utf8');
+            content = content.toString("utf8");
         }
     }
     return content;
 };
 
 const readJSONSync = function(filePath) {
-    var content = readFileContentSync(filePath);
-    var json = null;
+    const content = readFileContentSync(filePath);
+    let json = null;
     if (content) {
         json = JSON.parse(content);
     }
@@ -80,11 +80,14 @@ const addLog = function(msg, option) {
 //=====================================================================================
 
 const addModuleFiles = function(name, files, option) {
-    if (option.exclude.includes(name)) {
+    if (isList(option.exclude) && option.exclude.includes(name)) {
         return false;
     }
     if (!isList(files)) {
         return false;
+    }
+    if (!option.moduleFiles) {
+        option.moduleFiles = {};
     }
     option.moduleFiles[name] = files;
     return true;
@@ -111,7 +114,7 @@ const getModuleFilePath = function(modulePath, file, option) {
     let absMainPath = path.resolve(modulePath, file);
     if (!fs.existsSync(absMainPath)) {
         //try base on node modules 
-        let nmPath = path.resolve(option.nodeModules, file);
+        const nmPath = path.resolve(option.nodeModules || "", file);
         if (fs.existsSync(nmPath)) {
             absMainPath = nmPath;
         }
@@ -122,13 +125,13 @@ const getModuleFilePath = function(modulePath, file, option) {
         const isLink = stats.isSymbolicLink();
         //do NOT check link
         if (!isLink) {
-            addLog(CGS.red("ERROR: Not found file: " + absMainPath), option);
+            addLog(CGS.red(`ERROR: Not found file: ${absMainPath}`), option);
             return;
         }
     }
 
     //relative path
-    var filePath = path.relative(option.target, absMainPath);
+    let filePath = path.relative(option.target || "", absMainPath);
     filePath = formatPath(filePath);
     return filePath;
 };
@@ -142,7 +145,7 @@ const filterFileList = function(files, modulePath, option) {
 const getModuleMainFiles = function(modulePath, moduleConf, option) {
     //https://docs.npmjs.com/files/package.json#main
     let files = [];
-    var main = moduleConf.main;
+    const main = moduleConf.main;
     if (main) {
         if (Array.isArray(main)) {
             files = main;
@@ -152,7 +155,7 @@ const getModuleMainFiles = function(modulePath, moduleConf, option) {
     }
     //es module, seems not stage
     if (!files.length && moduleConf.module) {
-        files = [moduleConf.module + ""];
+        files = [`${moduleConf.module}`];
     }
     //default to index.js
     if (!files.length) {
@@ -188,7 +191,7 @@ const getModuleBrowserFiles = function(modulePath, moduleConf, option) {
     //object case, require handle module name
     let hasOverride = false;
     Object.keys(browser).forEach(function(name) {
-        let file = browser[name];
+        const file = browser[name];
         if (!file) {
             return;
         }
@@ -211,6 +214,9 @@ const getModuleBrowserFiles = function(modulePath, moduleConf, option) {
 
 const getModuleOverrideFiles = function(modulePath, moduleConf, option) {
     const moduleName = moduleConf.name;
+    if (!option.overrides) {
+        option.overrides = {};
+    }
     if (!option.overrides.hasOwnProperty(moduleName)) {
         return;
     }
@@ -244,7 +250,7 @@ const getModuleFiles = function(modulePath, moduleConf, option) {
     }
     files = getModuleMainFiles(modulePath, moduleConf, option);
     if (!isList(files)) {
-        addLog(CGS.yellow("WARN: Not found module file(s) in " + moduleConf.name + "/package.json, check fields 'browser' or 'main'."), option);
+        addLog(CGS.yellow(`WARN: Not found module file(s) in ${moduleConf.name}/package.json, check fields 'browser' or 'main'.`), option);
     }
     return files;
 };
@@ -257,7 +263,7 @@ const getModuleSubs = function(moduleConf, option) {
     }
     const subs = [];
     dependencies.forEach(function(subName) {
-        let subInfo = getModuleInfo(subName, option);
+        const subInfo = getModuleInfo(subName, option);
         if (subInfo) {
             subs.push(subInfo);
         }
@@ -267,6 +273,9 @@ const getModuleSubs = function(moduleConf, option) {
 
 const getModuleConf = function(modulePath, option) {
     //cache conf
+    if (!option.moduleConf) {
+        option.moduleConf = {};
+    }
     const conf = option.moduleConf[modulePath];
     if (conf) {
         return conf;
@@ -274,16 +283,19 @@ const getModuleConf = function(modulePath, option) {
     const depItemJsonPath = path.resolve(modulePath, "package.json");
     let moduleConf = readJSONSync(depItemJsonPath);
     if (!moduleConf) {
-        addLog(CGS.red("ERROR: Failed to read: " + depItemJsonPath), option);
+        addLog(CGS.red(`ERROR: Failed to read: ${depItemJsonPath}`), option);
         return;
     }
     //merge overrides if object
+    if (!option.overrides) {
+        option.overrides = {};
+    }
     const override = option.overrides[moduleConf.name];
     if (override && typeof(override) === "object" && !(override instanceof Array)) {
         //deep merge
         moduleConf = Object.assign(moduleConf, override);
     }
-    if(option.noBrowser) {
+    if (option.noBrowser) {
         delete moduleConf.browser;
     }
     option.moduleConf[modulePath] = moduleConf;
@@ -292,8 +304,8 @@ const getModuleConf = function(modulePath, option) {
 
 const getModuleInfo = function(moduleName, option) {
 
-    var modulePath = path.resolve(option.nodeModules, moduleName);
-    var moduleConf = getModuleConf(modulePath, option);
+    const modulePath = path.resolve(option.nodeModules || "", moduleName);
+    const moduleConf = getModuleConf(modulePath, option);
     if (!moduleConf) {
         return;
     }
@@ -304,6 +316,9 @@ const getModuleInfo = function(moduleName, option) {
     };
 
     //already done
+    if (!option.moduleMap) {
+        option.moduleMap = {};
+    }
     if (option.moduleMap[moduleName]) {
         moduleInfo.deduped = true;
         return moduleInfo;
@@ -313,7 +328,7 @@ const getModuleInfo = function(moduleName, option) {
     option.moduleMap[moduleName] = true;
 
     //ignore module from option.exclude
-    if (option.exclude.includes(moduleName)) {
+    if (isList(option.exclude) && option.exclude.includes(moduleName)) {
         moduleInfo.ignore = true;
         return moduleInfo;
     }
@@ -379,7 +394,7 @@ const generateDependencies = function(moduleConf, option) {
 
 //=====================================================================================
 
-const getOption = function(option) {
+const initOption = function(option) {
     return Object.assign({
         silent: true,
         noBrowser: false,
@@ -438,13 +453,13 @@ const getTargetPath = function(option) {
 };
 
 const flatdep = function(option) {
-    option = getOption(option);
+    option = initOption(option);
     option.cwd = process.cwd();
 
     //init package json path
     let entry = path.resolve(option.entry);
     if (!fs.existsSync(entry)) {
-        option.data.error = "ERROR: Not found: " + entry;
+        option.data.error = `ERROR: Not found: ${entry}`;
         return option.data;
     }
 
@@ -456,7 +471,7 @@ const flatdep = function(option) {
     //read module config
     const moduleConf = getModuleConf(entry, option);
     if (!moduleConf) {
-        option.data.error = "ERROR: Failed to read: " + entry;
+        option.data.error = `ERROR: Failed to read: ${entry}`;
         return option.data;
     }
     option.entry = entry;
@@ -471,7 +486,7 @@ const flatdep = function(option) {
 
     const nodeModules = getNodeModulesPath(option);
     if (!fs.existsSync(nodeModules)) {
-        option.data.error = "ERROR: Not found: " + nodeModules;
+        option.data.error = `ERROR: Not found: ${nodeModules}`;
         return option.data;
     }
     option.nodeModules = nodeModules;
@@ -481,6 +496,7 @@ const flatdep = function(option) {
     return option.data;
 };
 
+flatdep.initOption = initOption;
 flatdep.getModuleFiles = getModuleFiles;
 flatdep.getModuleSubs = getModuleSubs;
 flatdep.getNodeModulesPath = getNodeModulesPath;
@@ -492,7 +508,7 @@ flatdep.printModuleTree = function(data) {
         return;
     }
 
-    console.log(CGS.cyan("[" + data.name + "]") + " Module Tree:");
+    console.log(`${CGS.cyan(`[${data.name}]`)} Module Tree:`);
     const moduleTree = JSON.parse(JSON.stringify(data.moduleTree));
     consoleGrid.render({
         rows: moduleTree,
@@ -524,12 +540,12 @@ flatdep.printModuleFiles = function(data) {
         return;
     }
 
-    console.log(CGS.cyan("[" + data.name + "]") + " Module Files:");
+    console.log(`${CGS.cyan(`[${data.name}]`)} Module Files:`);
     const files = JSON.parse(JSON.stringify(data.files));
 
     const rows = files.map(item => {
-        let p = path.resolve(data.target, item);
-        let file = formatPath(path.relative(data.nodeModules, p));
+        const p = path.resolve(data.target, item);
+        const file = formatPath(path.relative(data.nodeModules, p));
         let size;
         if (fs.existsSync(p)) {
             size = fs.statSync(p).size;
@@ -552,7 +568,7 @@ flatdep.printModuleFiles = function(data) {
             }
         }, {
             id: "file",
-            name: "Files (" + formatPath(path.relative(data.target, data.nodeModules)) + ")",
+            name: `Files (${formatPath(path.relative(data.target, data.nodeModules))})`,
             maxWidth: 80
         }, {
             id: "size",
