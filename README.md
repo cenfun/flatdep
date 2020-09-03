@@ -125,6 +125,10 @@ node test.js
 
 # Changelog
 
+- v1.1.4
+    - fixed option when call getModuleFiles API
+    - output initOption API
+
 - v1.1.2
     - fixed browser override and path
 
