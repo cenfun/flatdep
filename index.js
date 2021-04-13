@@ -307,6 +307,7 @@ const getModuleInfo = function(moduleName, option) {
     const modulePath = path.resolve(option.nodeModules || "", moduleName);
     const moduleConf = getModuleConf(modulePath, option);
     if (!moduleConf) {
+        addLog(CGS.red(`ERROR: Not found config: ${moduleName}`), option);
         return;
     }
 

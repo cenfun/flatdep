@@ -1,4 +1,5 @@
 module.exports = {
+    "root": true,
     //system globals
     "env": {
         "node": true,
@@ -6,7 +7,6 @@ module.exports = {
         "amd": true,
         "commonjs": true,
         "es6": true,
-        "jquery": true,
         "mocha": true
     },
     //other globals
@@ -22,8 +22,6 @@ module.exports = {
     "plugins": [
         //"es"
     ],
-
-    "root": true,
 
     "parserOptions": {
         //set to 3, 5 (default), 6, 7, 8, 9, or 10 to specify the version of ECMAScript syntax you want to use. 
