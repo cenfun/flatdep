@@ -125,6 +125,9 @@ node test.js
 
 # Changelog
 
+- v1.1.5
+    - added log for module config not found
+
 - v1.1.4
     - fixed option when call getModuleFiles API
     - output initOption API
