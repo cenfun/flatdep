@@ -2,21 +2,22 @@
     "name": "flatdep",
     "version": "1.1.5",
     "description": "flat dependencies files",
-    "main": "index.js",
+    "main": "lib/index.js",
     "scripts": {
-        "test": "node test.js"
+        "test": "cd test/flatdep-test && npm install && cd ../ && node test.js"
     },
     "files": [
-        "index.js"
+        "lib"
     ],
     "repository": {
         "type": "git",
         "url": "https://github.com/cenfun/flatdep.git"
     },
     "dependencies": {
-        "console-grid": "^1.0.17"
+        "console-grid": "^1.0.17",
+        "eight-colors": "^1.0.0"
     },
     "devDependencies": {
-        "eslint": "^7.24.0"
+        "eslint": "^7.27.0"
     }
 }

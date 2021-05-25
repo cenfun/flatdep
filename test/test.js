@@ -1,13 +1,13 @@
-const flatdep = require("./");
+const flatdep = require("../lib");
 const d = flatdep({
     //stop log message
     silent: false,
     //no browser
     noBrowser: false,
     //project entry path (package.json folder)
-    entry: "../flatdep-test",
+    entry: "./flatdep-test",
     //target runtime path to files
-    target: "../flatdep-test/demo",
+    target: "./flatdep-test/demo",
     //node_modules path to detect dependencies
     nodeModules: "",
     //exclude/include modules
