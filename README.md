@@ -39,9 +39,9 @@ const d = flatdep({
     //no browser
     noBrowser: false,
     //project entry path (package.json folder)
-    entry: "../flatdep-test",
+    entry: "./flatdep-test",
     //target runtime path to files
-    target: "../flatdep-test/demo",
+    target: "./flatdep-test/demo",
     //node_modules path to detect dependencies
     nodeModules: "",
     //exclude/include modules
@@ -84,6 +84,7 @@ if (d.error) {
 flatdep.print(d);
 
 ```
+see test [test/test.js](test/test.js)
 
 print results:
 ```sh
@@ -115,12 +116,6 @@ print results:
 │   8 │ vue/dist/vue.min.js                  │  91.47 KB │
 │   9 │ vue-router/dist/vue-router.min.js    │   25.8 KB │
 └─────┴──────────────────────────────────────┴───────────┘
-```
-
-# Test
-
-```sh
-node test.js
 ```
 
 # Changelog
