@@ -45,6 +45,9 @@ const d = flatdep({
 if (d.error) {
     console.log(d.error);
 }
-//console.log(d.modules);
+console.log(d.modules);
 //console.log(d.files);
 flatdep.print(d);
+
+const fs = require("fs");
+fs.writeFileSync("test-info.json", JSON.stringify(d, null, 4));
