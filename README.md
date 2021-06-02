@@ -13,20 +13,21 @@ npm i flatdep
 package.json:
 ```json
 {
-  "name": "flatdep-test",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "@babel/polyfill": "^7.8.7",
-    "axios": "^0.19.2",
-    "backbone": "^1.4.0",
-    "bootstrap": "^4.4.1",
-    "d3": "^5.15.1",
-    "jquery": "^3.4.1",
-    "vue": "^2.6.11",
-    "vue-router": "^3.1.6"
-  }
+    "name": "flatdep-test",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "@babel/polyfill": "^7.12.1",
+        "axios": "^0.21.1",
+        "backbone": "^1.4.0",
+        "bootstrap": "^5.0.1",
+        "d3": "^6.7.0",
+        "jquery": "^3.6.0",
+        "vue": "^2.6.12",
+        "vue-router": "^3.5.1"
+    },
+    "devDependencies": {}
 }
 ```
 
@@ -79,10 +80,9 @@ const d = flatdep({
 if (d.error) {
     console.log(d.error);
 }
-//console.log(d.modules);
+console.log(d.modules);
 //console.log(d.files);
 flatdep.print(d);
-
 ```
 see test [test/test.js](test/test.js)
 
@@ -92,33 +92,36 @@ print results:
 ┌───────────────────┬─────────┬────────┐
 │ Module Name       │ Version │ Status │
 ├───────────────────┼─────────┼────────┤
-│ ├ @babel/polyfill │ 7.8.7   │        │
-│ ├ axios           │ 0.19.2  │        │
+│ ├ @babel/polyfill │ 7.12.1  │        │
+│ ├ axios           │ 0.21.1  │        │
 │ ├ backbone        │ 1.4.0   │        │
-│ │ └ underscore    │ 1.10.2  │        │
-│ ├ bootstrap       │ 4.4.1   │        │
-│ ├ d3              │ 5.15.1  │        │
-│ ├ jquery          │ 3.4.1   │ ignore │
-│ ├ vue             │ 2.6.11  │        │
-│ └ vue-router      │ 3.1.6   │        │
+│ │ └ underscore    │ 1.13.1  │        │
+│ ├ bootstrap       │ 5.0.1   │        │
+│ ├ d3              │ 6.7.0   │        │
+│ ├ jquery          │ 3.6.0   │ ignore │
+│ ├ vue             │ 2.6.12  │        │
+│ └ vue-router      │ 3.5.1   │        │
 └───────────────────┴─────────┴────────┘
 [flatdep-test] Module Files:
 ┌─────┬──────────────────────────────────────┬───────────┐
 │ NO. │ Files (../node_modules)              │      Size │
 ├─────┼──────────────────────────────────────┼───────────┤
-│   1 │ @babel/polyfill/dist/polyfill.min.js │  96.98 KB │
-│   2 │ axios/dist/axios.min.js              │  13.67 KB │
-│   3 │ underscore/underscore.js             │  58.66 KB │
+│   1 │ @babel/polyfill/dist/polyfill.min.js │  96.95 KB │
+│   2 │ axios/dist/axios.min.js              │  14.02 KB │
+│   3 │ underscore/underscore-umd.js         │  66.82 KB │
 │   4 │ backbone/backbone.js                 │  75.97 KB │
-│   5 │ bootstrap/dist/css/bootstrap.min.css │ 155.78 KB │
-│   6 │ bootstrap/dist/js/bootstrap.min.js   │   58.6 KB │
-│   7 │ d3/dist/d3.min.js                    │ 242.04 KB │
+│   5 │ bootstrap/dist/css/bootstrap.min.css │ 151.98 KB │
+│   6 │ bootstrap/dist/js/bootstrap.min.js   │  58.68 KB │
+│   7 │ d3/dist/d3.min.js                    │ 264.34 KB │
 │   8 │ vue/dist/vue.min.js                  │  91.47 KB │
-│   9 │ vue-router/dist/vue-router.min.js    │   25.8 KB │
+│   9 │ vue-router/dist/vue-router.min.js    │  28.28 KB │
 └─────┴──────────────────────────────────────┴───────────┘
 ```
 
 # Changelog
+
+- v1.1.6
+    - refactor for browser property
 
 - v1.1.5
     - added log for module config not found
