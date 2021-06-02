@@ -89,19 +89,19 @@ see test [test/test.js](test/test.js)
 print results:
 ```sh
 [flatdep-test] Module Tree:
-┌───────────────────┬─────────┬────────┐
-│ Module Name       │ Version │ Status │
-├───────────────────┼─────────┼────────┤
-│ ├ @babel/polyfill │ 7.12.1  │        │
-│ ├ axios           │ 0.21.1  │        │
-│ ├ backbone        │ 1.4.0   │        │
-│ │ └ underscore    │ 1.13.1  │        │
-│ ├ bootstrap       │ 5.0.1   │        │
-│ ├ d3              │ 6.7.0   │        │
-│ ├ jquery          │ 3.6.0   │ ignore │
-│ ├ vue             │ 2.6.12  │        │
-│ └ vue-router      │ 3.5.1   │        │
-└───────────────────┴─────────┴────────┘
+┌───────────────────┬─────────┬─────────┐
+│ Module Name       │ Version │ Status  │
+├───────────────────┼─────────┼─────────┤
+│ ├ @babel/polyfill │ 7.12.1  │         │
+│ ├ axios           │ 0.21.1  │         │
+│ ├ backbone        │ 1.4.0   │         │
+│ │ └ underscore    │ 1.13.1  │         │
+│ ├ bootstrap       │ 5.0.1   │         │
+│ ├ d3              │ 6.7.0   │         │
+│ ├ jquery          │ 3.6.0   │ ignored │
+│ ├ vue             │ 2.6.13  │         │
+│ └ vue-router      │ 3.5.1   │         │
+└───────────────────┴─────────┴─────────┘
 [flatdep-test] Module Files:
 ┌─────┬──────────────────────────────────────┬───────────┐
 │ NO. │ Files (../node_modules)              │      Size │
@@ -119,6 +119,9 @@ print results:
 ```
 
 # Changelog
+
+- v1.1.7
+    - added checking for mismatched version
 
 - v1.1.6
     - refactor for browser property
