@@ -126,7 +126,7 @@ print results:
 
 # Changelog
 
-- v1.1.8
+- v1.1.9
     - fixed main is dir, should support dir/index.js
 
 - v1.1.7

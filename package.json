@@ -1,6 +1,6 @@
 {
     "name": "flatdep",
-    "version": "1.1.8",
+    "version": "1.1.9",
     "description": "flat dependencies files",
     "main": "lib/index.js",
     "scripts": {
