@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 const isList = function(data) {
     if (data && data instanceof Array && data.length > 0) {
@@ -37,8 +37,8 @@ const forEachFile = function(p, extList, callback) {
 };
 
 
-forEachFile("../../Projects/", [".json"], function(filename, filepath) {
-    if (filename !== "package.json") {
+forEachFile('../../Projects/', ['.json'], function(filename, filepath) {
+    if (filename !== 'package.json') {
         return;
     }
 
@@ -47,7 +47,7 @@ forEachFile("../../Projects/", [".json"], function(filename, filepath) {
     const json = require(p);
 
     if (json.browser && !json.main) {
-        if (fs.existsSync(path.resolve(filepath, "index.js"))) {
+        if (fs.existsSync(path.resolve(filepath, 'index.js'))) {
             return;
         }
         console.log(p);

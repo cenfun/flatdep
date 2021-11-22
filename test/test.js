@@ -1,44 +1,47 @@
-const flatdep = require("../lib");
+const flatdep = require('../lib');
 const d = flatdep({
     //stop log message
     silent: false,
     //no browser
     noBrowser: false,
     //project entry path (package.json folder)
-    entry: "./flatdep-test",
+    entry: './flatdep-test',
     //target runtime path to files
-    target: "./flatdep-test/demo",
+    target: './flatdep-test/demo',
     //node_modules path to detect dependencies
-    nodeModules: "",
+    nodeModules: '',
     //exclude/include modules
-    exclude: ["jquery"],
+    exclude: ['jquery'],
     include: [],
     //override module config
     overrides: {
-        "@babel/polyfill": {
-            main: "dist/polyfill.min.js",
+        '@babel/polyfill': {
+            main: 'dist/polyfill.min.js',
             dependencies: null
         },
         axios: {
-            main: "dist/axios.min.js",
+            main: 'dist/axios.min.js',
             browser: null,
             dependencies: null
         },
         bootstrap: {
-            main: ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]
+            main: ['dist/css/bootstrap.min.css', 'dist/js/bootstrap.min.js']
         },
         d3: {
-            main: "dist/d3.min.js",
+            main: 'dist/d3.min.js',
+            dependencies: null
+        },
+        gauge: {
             dependencies: null
         },
         jquery: {
-            main: "dist/jquery.min.js"
+            main: 'dist/jquery.min.js'
         },
         vue: {
-            main: "dist/vue.min.js"
+            main: 'dist/vue.min.js'
         },
-        "vue-router": {
-            main: "dist/vue-router.min.js"
+        'vue-router': {
+            main: 'dist/vue-router.min.js'
         }
     }
 });
@@ -49,5 +52,5 @@ console.log(d.modules);
 //console.log(d.files);
 flatdep.print(d);
 
-const fs = require("fs");
-fs.writeFileSync("test-info.json", JSON.stringify(d, null, 4));
+const fs = require('fs');
+fs.writeFileSync('test-info.json', JSON.stringify(d, null, 4));
