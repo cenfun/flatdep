@@ -1,3 +1,4 @@
 /package-lock.json
 /node_modules/
 /.temp
+/test/flatdep-test/node_modules/
