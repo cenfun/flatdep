@@ -5,14 +5,14 @@
     "main": "index.js",
     "dependencies": {
         "@babel/polyfill": "^7.12.1",
-        "axios": "^0.21.1",
-        "backbone": "^1.4.0",
-        "bootstrap": "^5.0.1",
-        "d3": "^6.7.0",
-        "gauge": "^4.0.0",
+        "axios": "^0.27.2",
+        "backbone": "^1.4.1",
+        "bootstrap": "^5.2.0",
+        "d3": "^7.6.1",
+        "gauge": "^4.0.4",
         "jquery": "^3.6.0",
-        "vue": "^2.6.12",
-        "vue-router": "^3.5.1"
+        "react": "^18.2.0",
+        "vue": "^3.2.37"
     },
     "devDependencies": {}
 }

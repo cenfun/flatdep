@@ -38,10 +38,12 @@ const d = flatdep({
             main: 'dist/jquery.min.js'
         },
         vue: {
-            main: 'dist/vue.min.js'
+            dependencies: {},
+            main: 'dist/vue.runtime.global.prod.js'
         },
-        'vue-router': {
-            main: 'dist/vue-router.min.js'
+        react: {
+            dependencies: {},
+            main: 'umd/react.production.min.js'
         }
     }
 });

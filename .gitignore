@@ -2,3 +2,4 @@
 /node_modules/
 /.temp
 /test/flatdep-test/node_modules/
+/test/flatdep-test/package-lock.json
