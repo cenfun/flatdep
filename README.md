@@ -19,14 +19,14 @@ package.json:
     "main": "index.js",
     "dependencies": {
         "@babel/polyfill": "^7.12.1",
-        "axios": "^0.21.1",
-        "backbone": "^1.4.0",
-        "bootstrap": "^5.0.1",
-        "d3": "^6.7.0",
-        "gauge": "^4.0.0",
+        "axios": "^0.27.2",
+        "backbone": "^1.4.1",
+        "bootstrap": "^5.2.0",
+        "d3": "^7.6.1",
+        "gauge": "^4.0.4",
         "jquery": "^3.6.0",
-        "vue": "^2.6.12",
-        "vue-router": "^3.5.1"
+        "react": "^18.2.0",
+        "vue": "^3.2.37"
     },
     "devDependencies": {}
 }
@@ -74,10 +74,12 @@ const d = flatdep({
             main: 'dist/jquery.min.js'
         },
         vue: {
-            main: 'dist/vue.min.js'
+            dependencies: {},
+            main: 'dist/vue.runtime.global.prod.js'
         },
-        'vue-router': {
-            main: 'dist/vue-router.min.js'
+        react: {
+            dependencies: {},
+            main: 'umd/react.production.min.js'
         }
     }
 });
@@ -97,34 +99,37 @@ print results:
 │ Module Name       │ Version │ Status  │
 ├───────────────────┼─────────┼─────────┤
 │ ├ @babel/polyfill │ 7.12.1  │         │
-│ ├ axios           │ 0.21.4  │         │
-│ ├ backbone        │ 1.4.0   │         │
-│ │ └ underscore    │ 1.13.1  │         │
-│ ├ bootstrap       │ 5.1.3   │         │
-│ ├ d3              │ 6.7.0   │         │
-│ ├ gauge           │ 4.0.0   │         │
+│ ├ axios           │ 0.27.2  │         │
+│ ├ backbone        │ 1.4.1   │         │
+│ │ └ underscore    │ 1.13.4  │         │
+│ ├ bootstrap       │ 5.2.0   │         │
+│ ├ d3              │ 7.6.1   │         │
+│ ├ gauge           │ 4.0.4   │         │
 │ ├ jquery          │ 3.6.0   │ ignored │
-│ ├ vue             │ 2.6.14  │         │
-│ └ vue-router      │ 3.5.3   │         │
+│ ├ react           │ 18.2.0  │         │
+│ └ vue             │ 3.2.37  │         │
 └───────────────────┴─────────┴─────────┘
 [flatdep-test] Module Files:
 ┌─────┬──────────────────────────────────────┬───────────┐
 │ NO. │ Files (../node_modules)              │      Size │
 ├─────┼──────────────────────────────────────┼───────────┤
 │   1 │ @babel/polyfill/dist/polyfill.min.js │  96.95 KB │
-│   2 │ axios/dist/axios.min.js              │  18.71 KB │
-│   3 │ underscore/underscore-umd.js         │  66.82 KB │
-│   4 │ backbone/backbone.js                 │  75.97 KB │
-│   5 │ bootstrap/dist/css/bootstrap.min.css │ 160.03 KB │
-│   6 │ bootstrap/dist/js/bootstrap.min.js   │  57.83 KB │
-│   7 │ d3/dist/d3.min.js                    │ 264.34 KB │
-│   8 │ gauge/lib/index.js                   │   7.13 KB │
-│   9 │ vue/dist/vue.min.js                  │  91.94 KB │
-│  10 │ vue-router/dist/vue-router.min.js    │  28.52 KB │
+│   2 │ axios/dist/axios.min.js              │  20.28 KB │
+│   3 │ underscore/underscore-umd.js         │  66.81 KB │
+│   4 │ backbone/backbone.js                 │  76.35 KB │
+│   5 │ bootstrap/dist/css/bootstrap.min.css │ 190.14 KB │
+│   6 │ bootstrap/dist/js/bootstrap.min.js   │   58.7 KB │
+│   7 │ d3/dist/d3.min.js                    │ 272.05 KB │
+│   8 │ gauge/lib/index.js                   │   7.12 KB │
+│   9 │ react/umd/react.production.min.js    │  10.49 KB │
+│  10 │ vue/dist/vue.runtime.global.prod.js  │  82.45 KB │
 └─────┴──────────────────────────────────────┴───────────┘
 ```
 
-# Changelog
+# CHANGELOG
+
+- v1.1.10
+    - update deps
 
 - v1.1.9
     - fixed main is dir, should support dir/index.js
