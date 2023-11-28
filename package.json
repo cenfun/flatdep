@@ -9,18 +9,19 @@
     "files": [
         "lib"
     ],
+    "license": "MIT",
     "repository": {
         "type": "git",
         "url": "https://github.com/cenfun/flatdep.git"
     },
     "dependencies": {
-        "console-grid": "^2.0.0",
-        "eight-colors": "^1.0.1",
-        "semver": "^7.3.7"
+        "console-grid": "^2.0.1",
+        "eight-colors": "^1.0.3",
+        "semver": "^7.5.4"
     },
     "devDependencies": {
-        "eslint": "^8.22.0",
-        "eslint-config-plus": "^1.0.3",
+        "eslint": "^8.54.0",
+        "eslint-config-plus": "^1.0.6",
         "eslint-plugin-html": "^7.1.0"
     }
 }
